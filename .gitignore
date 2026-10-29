@@ -1,0 +1,13 @@
+# Portable tools (JDK, developer key) - local only
+.tools/
+
+# Build output
+bin/
+gen/
+
+# Developer signing key - never commit
+*.der
+*.pem
+
+# Editor
+.vscode/settings.json
