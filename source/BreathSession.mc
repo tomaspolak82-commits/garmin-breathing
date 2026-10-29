@@ -15,30 +15,41 @@ enum SessionState {
 // Breathing rhythm, vibration cues and FIT recording.
 class BreathSession {
 
+    const RING_COUNT = 4;
+
     var state as SessionState = STATE_RUNNING;
-    var elapsedSec as Number = 0;
     // 0 = no time limit; set to 0 when the user continues after the countdown
     var limitSec as Number;
 
-    private var _inhaleSec as Number;
-    private var _exhaleSec as Number;
+    private var _inhaleMs as Number;
+    private var _exhaleMs as Number;
     private var _tapMs as Number;
-    private var _phaseSec as Number = 0;
+    // 0 = guide the whole session
+    private var _guideSec as Number = 0;
+    // Animation needs quarter steps of a phase, otherwise one tick per second is enough
+    private var _tickMs as Number;
+    private var _elapsedMs as Number = 0;
+    private var _phaseMs as Number = 0;
     private var _inhale as Boolean = true;
     private var _timer as Timer.Timer?;
     private var _recording as ActivityRecording.Session?;
 
     function initialize() {
-        _inhaleSec = Settings.inhaleSec();
-        _exhaleSec = Settings.exhaleSec();
+        _inhaleMs = Settings.inhaleSec() * 1000;
+        _exhaleMs = Settings.exhaleSec() * 1000;
         _tapMs = Settings.tapMs();
+        _tickMs = Settings.animation() ? 250 : 1000;
         limitSec = Settings.durationMin() * 60;
+        var guide = Settings.guidePercent();
+        if (limitSec > 0 && guide < 100) {
+            _guideSec = limitSec * guide / 100;
+        }
     }
 
     function start() as Void {
         Sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
         _recording = ActivityRecording.createSession({
-            :name => "Koherence " + _inhaleSec + "/" + _exhaleSec,
+            :name => activityName(),
             :sport => Activity.SPORT_MEDITATION,
             :subSport => Activity.SUB_SPORT_BREATHING
         });
@@ -47,8 +58,23 @@ class BreathSession {
         startTimer();
     }
 
+    function elapsedSec() as Number {
+        return _elapsedMs / 1000;
+    }
+
     function remainingSec() as Number {
-        return limitSec - elapsedSec;
+        return limitSec - elapsedSec();
+    }
+
+    function isInhale() as Boolean {
+        return _inhale;
+    }
+
+    // Rings grow from 1 to 4 during the inhale and shrink from 4 to 1 during the exhale.
+    function rings() as Number {
+        var phaseLength = _inhale ? _inhaleMs : _exhaleMs;
+        var step = _phaseMs * RING_COUNT / phaseLength;
+        return _inhale ? step + 1 : RING_COUNT - step;
     }
 
     function pause() as Void {
@@ -68,11 +94,11 @@ class BreathSession {
         if (state != STATE_PAUSED) {
             return;
         }
-        if (limitSec > 0 && elapsedSec >= limitSec) {
+        if (limitSec > 0 && elapsedSec() >= limitSec) {
             limitSec = 0;
         }
         state = STATE_RUNNING;
-        _phaseSec = 0;
+        _phaseMs = 0;
         _inhale = true;
         if (_recording != null) {
             _recording.start();
@@ -82,17 +108,17 @@ class BreathSession {
     }
 
     function onTick() as Void {
-        elapsedSec++;
-        if (limitSec > 0 && elapsedSec >= limitSec) {
+        _elapsedMs += _tickMs;
+        if (limitSec > 0 && elapsedSec() >= limitSec) {
             pause();
             endSignal();
-            WatchUi.pushView(new PauseMenu(), new PauseMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
+            WatchUi.pushView(new PauseMenu(self), new PauseMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
             return;
         }
-        _phaseSec++;
-        var phaseLength = _inhale ? _inhaleSec : _exhaleSec;
-        if (_phaseSec >= phaseLength) {
-            _phaseSec = 0;
+        _phaseMs += _tickMs;
+        var phaseLength = _inhale ? _inhaleMs : _exhaleMs;
+        if (_phaseMs >= phaseLength) {
+            _phaseMs = 0;
             _inhale = !_inhale;
             tap();
         }
@@ -116,9 +142,22 @@ class BreathSession {
         state = STATE_DONE;
     }
 
+    // "Koherence 5/5", or "Koherence 5/5 · vedení 1,5 min" when guidance stops early.
+    private function activityName() as String {
+        var name = "Koherence " + Settings.rhythmLabel();
+        if (_guideSec > 0) {
+            var minutes = (_guideSec / 60).toString();
+            if (_guideSec % 60 != 0) {
+                minutes += ",5";
+            }
+            name += " · vedení " + minutes + " min";
+        }
+        return name;
+    }
+
     private function startTimer() as Void {
         _timer = new Timer.Timer();
-        _timer.start(method(:onTick), 1000, true);
+        _timer.start(method(:onTick), _tickMs, true);
         WatchUi.requestUpdate();
     }
 
@@ -130,27 +169,18 @@ class BreathSession {
     }
 
     private function tap() as Void {
+        if (_tapMs == 0 || (_guideSec > 0 && elapsedSec() >= _guideSec)) {
+            return;
+        }
         if (Attention has :vibrate) {
             Attention.vibrate([new Attention.VibeProfile(100, _tapMs)]);
         }
     }
 
-    // Two long vibrations plus a tone, clearly different from the taps.
+    // One long vibration; Forerunner devices merge vibration patterns into one anyway.
     private function endSignal() as Void {
         if (Attention has :vibrate) {
-            Attention.vibrate([
-                new Attention.VibeProfile(100, 600),
-                new Attention.VibeProfile(0, 300),
-                new Attention.VibeProfile(100, 600)
-            ]);
-        }
-        if ((Attention has :playTone) && (Attention has :ToneProfile)) {
-            Attention.playTone({
-                :toneProfile => [
-                    new Attention.ToneProfile(2500, 250),
-                    new Attention.ToneProfile(3200, 400)
-                ]
-            });
+            Attention.vibrate([new Attention.VibeProfile(100, 1000)]);
         }
     }
 }

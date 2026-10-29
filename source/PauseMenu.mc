@@ -4,11 +4,25 @@ import Toybox.WatchUi;
 
 class PauseMenu extends WatchUi.Menu2 {
 
-    function initialize() {
+    private var _session as BreathSession;
+
+    function initialize(session as BreathSession) {
         Menu2.initialize({:title => "Pauza"});
+        _session = session;
         addItem(new WatchUi.MenuItem("Pokračovat", null, "resume", null));
         addItem(new WatchUi.MenuItem("Uložit", null, "save", null));
         addItem(new WatchUi.MenuItem("Zrušit", null, "discard", null));
+    }
+
+    // Shown again after the discard confirmation closes: if the activity was
+    // discarded, close this menu and the run screen to get back to the main menu.
+    function onShow() as Void {
+        Menu2.onShow();
+        if (_session.state == STATE_DONE) {
+            getApp().session = null;
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        }
     }
 }
 
@@ -54,9 +68,9 @@ class DiscardDelegate extends WatchUi.ConfirmationDelegate {
     }
 
     function onResponse(value as Confirm) as Boolean {
+        // The pause menu notices the finished session when it is shown again
         if (value == WatchUi.CONFIRM_YES) {
             _session.finish(false);
-            System.exit();
         }
         return true;
     }

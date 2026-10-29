@@ -1,7 +1,7 @@
 import Toybox.Lang;
 import Toybox.WatchUi;
 
-// Start screen: Start plus the four settings, each showing its current value.
+// Start screen: Start plus the settings, each showing its current value.
 class MainMenu extends WatchUi.Menu2 {
 
     function initialize() {
@@ -10,17 +10,20 @@ class MainMenu extends WatchUi.Menu2 {
         addItem(new WatchUi.MenuItem("Nádech", null, "inhale", null));
         addItem(new WatchUi.MenuItem("Výdech", null, "exhale", null));
         addItem(new WatchUi.MenuItem("Délka", null, "duration", null));
-        addItem(new WatchUi.MenuItem("Ťuknutí", null, "tap", null));
+        addItem(new WatchUi.MenuItem("Vibrace", null, "tap", null));
+        addItem(new WatchUi.MenuItem("Vedení", null, "guide", null));
+        addItem(new WatchUi.MenuItem("Animace", null, "animation", null));
         refresh();
     }
 
     function refresh() as Void {
-        var duration = Settings.durationMin();
-        setSubLabel("start", Settings.rhythmLabel() + " s · " + Settings.durationLabel(duration));
-        setSubLabel("inhale", Settings.inhaleSec() + " s");
-        setSubLabel("exhale", Settings.exhaleSec() + " s");
-        setSubLabel("duration", Settings.durationLabel(duration));
-        setSubLabel("tap", Settings.tapMs() + " ms");
+        setSubLabel("start", Settings.rhythmLabel() + " s · " + Settings.valueLabel("duration", Settings.durationMin()));
+        setSubLabel("inhale", Settings.valueLabel("inhale", Settings.inhaleSec()));
+        setSubLabel("exhale", Settings.valueLabel("exhale", Settings.exhaleSec()));
+        setSubLabel("duration", Settings.valueLabel("duration", Settings.durationMin()));
+        setSubLabel("tap", Settings.valueLabel("tap", Settings.tapMs()));
+        setSubLabel("guide", Settings.valueLabel("guide", Settings.guidePercent()));
+        setSubLabel("animation", Settings.valueLabel("animation", Settings.animation() ? 1 : 0));
     }
 
     private function setSubLabel(id as String, text as String) as Void {
@@ -48,13 +51,17 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.pushView(new RunView(session), new RunDelegate(session), WatchUi.SLIDE_IMMEDIATE);
             session.start();
         } else if (id.equals("inhale")) {
-            pushOptions("Nádech", id, Settings.PHASE_OPTIONS, Settings.inhaleSec(), " s");
+            pushOptions("Nádech", id, Settings.PHASE_OPTIONS, Settings.inhaleSec());
         } else if (id.equals("exhale")) {
-            pushOptions("Výdech", id, Settings.PHASE_OPTIONS, Settings.exhaleSec(), " s");
+            pushOptions("Výdech", id, Settings.PHASE_OPTIONS, Settings.exhaleSec());
         } else if (id.equals("duration")) {
-            pushOptions("Délka", id, Settings.DURATION_OPTIONS, Settings.durationMin(), null);
+            pushOptions("Délka", id, Settings.DURATION_OPTIONS, Settings.durationMin());
         } else if (id.equals("tap")) {
-            pushOptions("Ťuknutí", id, Settings.TAP_OPTIONS, Settings.tapMs(), " ms");
+            pushOptions("Vibrace", id, Settings.TAP_OPTIONS, Settings.tapMs());
+        } else if (id.equals("guide")) {
+            pushOptions("Vedení", id, Settings.GUIDE_OPTIONS, Settings.guidePercent());
+        } else if (id.equals("animation")) {
+            pushOptions("Animace", id, Settings.ANIMATION_OPTIONS, Settings.animation() ? 1 : 0);
         }
     }
 
@@ -62,13 +69,11 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
         WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
     }
 
-    // Opens a list of values; unit null means a duration in minutes.
-    private function pushOptions(title as String, key as String, options as Array<Number>, current as Number, unit as String?) as Void {
+    private function pushOptions(title as String, key as String, options as Array<Number>, current as Number) as Void {
         var menu = new WatchUi.Menu2({:title => title});
         for (var i = 0; i < options.size(); i++) {
             var value = options[i];
-            var label = unit == null ? Settings.durationLabel(value) : value + unit;
-            menu.addItem(new WatchUi.MenuItem(label, null, value, null));
+            menu.addItem(new WatchUi.MenuItem(Settings.valueLabel(key, value), null, value, null));
             if (value == current) {
                 menu.setFocus(i);
             }

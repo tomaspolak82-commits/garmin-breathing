@@ -3,39 +3,35 @@
 Stav k 2026-10-29. Zatím jen lokálně, bez GitHubu.
 
 ## Cíl
-Aplikace pro hodinky, která vede koherenční dýchání jemnými vibracemi a uloží cvičení do Garmin Connect jako meditaci s tepem.
+Aplikace pro hodinky, která vede koherenční dýchání jemnými vibracemi a uloží cvičení do Garmin Connect jako meditaci s tepem a dechovou frekvencí.
 
-## Verze 1
-
-### Nastavení před startem (tlačítky na hodinkách)
+## Nastavení (menu na hodinkách, pamatuje si poslední hodnoty)
 - Nádech: 2–10 s, výchozí 5 s.
-- Výdech: 2–10 s, výchozí 5 s, nastavuje se zvlášť.
-- Délka: odpočet (výchozí 10 min), nebo volné cvičení bez limitu.
-- Poslední nastavení si hodinky pamatují.
+- Výdech: 2–10 s, výchozí 5 s.
+- Délka: volná, nebo 5–60 min, výchozí 10 min.
+- Vibrace: Vyp / 15 / 30 / 40 ms, výchozí 15 ms.
+- Vedení: celou dobu / 10 / 30 / 50 % odpočtu, výchozí celou dobu. U volné délky vždy celou dobu.
+- Animace: Ne / Ano, výchozí Ne.
 
-### Během cvičení
-- Černý displej, dole malým bílým písmem odpočet, nebo uplynulý čas.
-- Při každém přepnutí nádech/výdech jedno krátké jemné ťuknutí. Fáze se nerozlišují.
-- Žádný zvuk. Tep se nezobrazuje, ale nahrává.
-- Zhasnutí displeje nevadí, vibrace běží dál.
+## Během cvičení
+- Černý displej, dole malý bílý čas: odpočet, nebo uplynulý čas.
+- Při každém přepnutí nádech/výdech jedno ťuknutí. Po skončení vedení vibrace potichu přestanou.
+- Animace: 4 soustředné kruhy, při nádechu přibývají (tyrkysové), při výdechu ubývají (jantarové).
+- Žádný zvuk.
 
-### Pauza a konec
-- Tlačítko START/STOP: pauza a menu Pokračovat / Uložit / Zrušit.
-- Konec odpočtu: dvojitá dlouhá vibrace (výrazně jiná než ťuknutí), pípnutí jen pokud ho FR165 Music umí, pak stejné menu.
-- Uložení jako aktivita Meditace (SPORT_MEDITATION, podtyp SUB_SPORT_BREATHING) s tepem.
+## Pauza a konec
+- START/STOP: pauza a menu Pokračovat / Uložit / Zrušit.
+- Uložit: uloží aktivitu a ukončí aplikaci.
+- Zrušit: po potvrzení zahodí aktivitu a vrátí se do menu Koherence.
+- Konec odpočtu: jedna dlouhá vibrace (1 s), pak stejné menu. Pokračovat přepne na volné cvičení.
+- Aktivita: Meditace (SPORT_MEDITATION, SUB_SPORT_BREATHING), název podle nastavení, např. „Koherence 5/5 · vedení 3 min".
 
-### Dechová frekvence
-- Zaznamenat cílový rytmus (např. 5/5 = 6 dechů/min).
-- Zjistit, jestli Garmin Connect ukáže naměřenou dechovou frekvenci sám.
+## Ověřeno na hodinkách (2026-10-29)
+- Záznam jako meditace s tepem a dechovou frekvencí v Garmin Connect.
+- Ťuknutí 15 ms stačí a neruší.
+- Vibrační vzory nefungují: více vibrací s mezerou se slije do jedné dlouhé.
+- Pípnutí z aplikace není slyšet.
+- Menu, paměť nastavení, pauza a pokračování.
 
-## Verze 2 (později)
+## Nápady na později
 - Krabicový dech: nádech – zadržení – výdech – zadržení.
-- Porovnání cíl × skutečnost dechové frekvence, případně vlastní výpočet z kolísání tepu.
-
-## Otevřené otázky (ověří první test na hodinkách)
-- Uloží se aktivita v Garmin Connect jako Meditace?
-- Nahrává se tep?
-- Je krátké ťuknutí dost jemné? (Forerunner nemá nastavitelnou sílu vibrace, jen délku.)
-- Zhasíná displej během aplikace?
-- Umí FR165 Music z aplikace pípnout?
-- Ukáže Garmin Connect dechovou frekvenci?

@@ -22,10 +22,23 @@ class RunView extends WatchUi.View {
 
         if (_session.state == STATE_PAUSED) {
             dc.drawText(w / 2, h / 2, Graphics.FONT_SMALL, "Pauza", center);
+        } else if (Settings.animation()) {
+            drawRings(dc, w, h);
         }
 
-        var sec = _session.limitSec > 0 ? _session.remainingSec() : _session.elapsedSec;
+        var sec = _session.limitSec > 0 ? _session.remainingSec() : _session.elapsedSec();
         dc.drawText(w / 2, h * 0.85, Graphics.FONT_XTINY, formatTime(sec), center);
+    }
+
+    // Concentric outlines in muted colors: teal while inhaling, amber while exhaling.
+    private function drawRings(dc as Dc, w as Number, h as Number) as Void {
+        dc.setColor(_session.isInhale() ? 0x1B7F79 : 0xB0651E, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(3);
+        var step = w * 0.07;
+        for (var i = 1; i <= _session.rings(); i++) {
+            dc.drawCircle(w / 2, h * 0.45, step * i);
+        }
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
 
     private function formatTime(sec as Number) as String {
@@ -46,7 +59,7 @@ class RunDelegate extends WatchUi.BehaviorDelegate {
     function onSelect() as Boolean {
         if (_session.state == STATE_RUNNING) {
             _session.pause();
-            WatchUi.pushView(new PauseMenu(), new PauseMenuDelegate(_session), WatchUi.SLIDE_IMMEDIATE);
+            WatchUi.pushView(new PauseMenu(_session), new PauseMenuDelegate(_session), WatchUi.SLIDE_IMMEDIATE);
         }
         return true;
     }
