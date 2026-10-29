@@ -1,5 +1,4 @@
 import Toybox.Activity;
-import Toybox.ActivityMonitor;
 import Toybox.ActivityRecording;
 import Toybox.Attention;
 import Toybox.Lang;
@@ -8,76 +7,90 @@ import Toybox.Timer;
 import Toybox.WatchUi;
 
 enum SessionState {
-    STATE_READY,
     STATE_RUNNING,
-    STATE_SAVED
+    STATE_PAUSED,
+    STATE_DONE
 }
 
 // Breathing rhythm, vibration cues and FIT recording.
 class BreathSession {
 
-    // Fixed rhythm for the test build: 5 s inhale, 5 s exhale
-    private const INHALE_SEC = 5;
-    private const EXHALE_SEC = 5;
-
-    // Tap lengths to compare on the watch, in milliseconds
-    private const TAP_LENGTHS = [40, 80, 150, 300];
-
-    var state as SessionState = STATE_READY;
+    var state as SessionState = STATE_RUNNING;
     var elapsedSec as Number = 0;
-    var tapIndex as Number = 1;
-    var toneResult as String = "";
+    // 0 = no time limit; set to 0 when the user continues after the countdown
+    var limitSec as Number;
 
+    private var _inhaleSec as Number;
+    private var _exhaleSec as Number;
+    private var _tapMs as Number;
     private var _phaseSec as Number = 0;
     private var _inhale as Boolean = true;
     private var _timer as Timer.Timer?;
     private var _recording as ActivityRecording.Session?;
 
     function initialize() {
-    }
-
-    function tapLength() as Number {
-        return TAP_LENGTHS[tapIndex] as Number;
-    }
-
-    function nextTapLength(step as Number) as Void {
-        var count = TAP_LENGTHS.size();
-        tapIndex = (tapIndex + step + count) % count;
-        tap();
-    }
-
-    function respirationRate() as Number? {
-        var info = ActivityMonitor.getInfo();
-        if (info has :respirationRate) {
-            return info.respirationRate;
-        }
-        return null;
+        _inhaleSec = Settings.inhaleSec();
+        _exhaleSec = Settings.exhaleSec();
+        _tapMs = Settings.tapMs();
+        limitSec = Settings.durationMin() * 60;
     }
 
     function start() as Void {
         Sensor.setEnabledSensors([Sensor.SENSOR_HEARTRATE]);
         _recording = ActivityRecording.createSession({
-            :name => "Koherence 5/5",
+            :name => "Koherence " + _inhaleSec + "/" + _exhaleSec,
             :sport => Activity.SPORT_MEDITATION,
             :subSport => Activity.SUB_SPORT_BREATHING
         });
         _recording.start();
+        tap();
+        startTimer();
+    }
 
-        elapsedSec = 0;
+    function remainingSec() as Number {
+        return limitSec - elapsedSec;
+    }
+
+    function pause() as Void {
+        if (state != STATE_RUNNING) {
+            return;
+        }
+        state = STATE_PAUSED;
+        stopTimer();
+        if (_recording != null) {
+            _recording.stop();
+        }
+        WatchUi.requestUpdate();
+    }
+
+    // Continues the rhythm with a new inhale.
+    function resume() as Void {
+        if (state != STATE_PAUSED) {
+            return;
+        }
+        if (limitSec > 0 && elapsedSec >= limitSec) {
+            limitSec = 0;
+        }
+        state = STATE_RUNNING;
         _phaseSec = 0;
         _inhale = true;
-        state = STATE_RUNNING;
+        if (_recording != null) {
+            _recording.start();
+        }
         tap();
-
-        _timer = new Timer.Timer();
-        _timer.start(method(:onTick), 1000, true);
-        WatchUi.requestUpdate();
+        startTimer();
     }
 
     function onTick() as Void {
         elapsedSec++;
+        if (limitSec > 0 && elapsedSec >= limitSec) {
+            pause();
+            endSignal();
+            WatchUi.pushView(new PauseMenu(), new PauseMenuDelegate(self), WatchUi.SLIDE_IMMEDIATE);
+            return;
+        }
         _phaseSec++;
-        var phaseLength = _inhale ? INHALE_SEC : EXHALE_SEC;
+        var phaseLength = _inhale ? _inhaleSec : _exhaleSec;
         if (_phaseSec >= phaseLength) {
             _phaseSec = 0;
             _inhale = !_inhale;
@@ -86,12 +99,9 @@ class BreathSession {
         WatchUi.requestUpdate();
     }
 
-    // Stops the rhythm and saves (or discards) the recording.
+    // Saves or discards the recording. Safe to call more than once.
     function finish(save as Boolean) as Void {
-        if (_timer != null) {
-            _timer.stop();
-            _timer = null;
-        }
+        stopTimer();
         if (_recording != null) {
             if (_recording.isRecording()) {
                 _recording.stop();
@@ -103,16 +113,25 @@ class BreathSession {
             }
             _recording = null;
         }
-        if (state == STATE_RUNNING) {
-            state = STATE_SAVED;
-            endSignal();
-        }
+        state = STATE_DONE;
+    }
+
+    private function startTimer() as Void {
+        _timer = new Timer.Timer();
+        _timer.start(method(:onTick), 1000, true);
         WatchUi.requestUpdate();
+    }
+
+    private function stopTimer() as Void {
+        if (_timer != null) {
+            _timer.stop();
+            _timer = null;
+        }
     }
 
     private function tap() as Void {
         if (Attention has :vibrate) {
-            Attention.vibrate([new Attention.VibeProfile(100, tapLength())]);
+            Attention.vibrate([new Attention.VibeProfile(100, _tapMs)]);
         }
     }
 
@@ -132,9 +151,6 @@ class BreathSession {
                     new Attention.ToneProfile(3200, 400)
                 ]
             });
-            toneResult = "ton: ano";
-        } else {
-            toneResult = "ton: nepodporovano";
         }
     }
 }
