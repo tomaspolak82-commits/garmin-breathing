@@ -38,7 +38,7 @@ class BreathSession {
         _inhaleMs = Settings.inhaleSec() * 1000;
         _exhaleMs = Settings.exhaleSec() * 1000;
         _tapMs = Settings.tapMs();
-        _tickMs = Settings.animation() ? 250 : 1000;
+        _tickMs = Settings.animation() != Settings.ANIMATION_NONE ? 250 : 1000;
         limitSec = Settings.durationMin() * 60;
         var guide = Settings.guidePercent();
         if (limitSec > 0 && guide < 100) {
@@ -70,11 +70,15 @@ class BreathSession {
         return _inhale;
     }
 
+    // 1 to 4 within the current phase, growing in both inhale and exhale.
+    function phaseStep() as Number {
+        var phaseLength = _inhale ? _inhaleMs : _exhaleMs;
+        return _phaseMs * RING_COUNT / phaseLength + 1;
+    }
+
     // Rings grow from 1 to 4 during the inhale and shrink from 4 to 1 during the exhale.
     function rings() as Number {
-        var phaseLength = _inhale ? _inhaleMs : _exhaleMs;
-        var step = _phaseMs * RING_COUNT / phaseLength;
-        return _inhale ? step + 1 : RING_COUNT - step;
+        return _inhale ? phaseStep() : RING_COUNT + 1 - phaseStep();
     }
 
     function pause() as Void {

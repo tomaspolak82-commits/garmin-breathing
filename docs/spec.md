@@ -11,12 +11,13 @@ Aplikace pro hodinky, která vede koherenční dýchání jemnými vibracemi a u
 - Délka: volná, nebo 5–60 min, výchozí 10 min.
 - Vibrace: Vyp / 15 / 30 / 40 ms, výchozí 15 ms.
 - Vedení: celou dobu / 10 / 30 / 50 % odpočtu, výchozí celou dobu. U volné délky vždy celou dobu.
-- Animace: Ne / Ano, výchozí Ne.
+- Animace: Ne / Kruhy / Tvář, výchozí Ne.
 
 ## Během cvičení
 - Černý displej, dole malý bílý čas: odpočet, nebo uplynulý čas.
 - Při každém přepnutí nádech/výdech jedno ťuknutí. Po skončení vedení vibrace potichu přestanou.
-- Animace: 4 soustředné kruhy, při nádechu přibývají (tyrkysové), při výdechu ubývají (jantarové).
+- Animace Kruhy: 4 soustředné kruhy, při nádechu přibývají (tyrkysové), při výdechu ubývají (jantarové).
+- Animace Tvář: šedá čára profilu obličeje, při nádechu přibývají tyrkysové obloučky uvnitř hlavy za nosem, při výdechu přibývají jantarové obloučky před obličejem.
 - Žádný zvuk.
 
 ## Pauza a konec

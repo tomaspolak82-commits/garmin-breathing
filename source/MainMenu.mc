@@ -23,7 +23,7 @@ class MainMenu extends WatchUi.Menu2 {
         setSubLabel("duration", Settings.valueLabel("duration", Settings.durationMin()));
         setSubLabel("tap", Settings.valueLabel("tap", Settings.tapMs()));
         setSubLabel("guide", Settings.valueLabel("guide", Settings.guidePercent()));
-        setSubLabel("animation", Settings.valueLabel("animation", Settings.animation() ? 1 : 0));
+        setSubLabel("animation", Settings.valueLabel("animation", Settings.animation()));
     }
 
     private function setSubLabel(id as String, text as String) as Void {
@@ -61,7 +61,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (id.equals("guide")) {
             pushOptions("Vedení", id, Settings.GUIDE_OPTIONS, Settings.guidePercent());
         } else if (id.equals("animation")) {
-            pushOptions("Animace", id, Settings.ANIMATION_OPTIONS, Settings.animation() ? 1 : 0);
+            pushOptions("Animace", id, Settings.ANIMATION_OPTIONS, Settings.animation());
         }
     }
 

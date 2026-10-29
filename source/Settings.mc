@@ -11,7 +11,10 @@ module Settings {
     const TAP_OPTIONS = [0, 15, 30, 40];
     // Share of the countdown with vibration guidance, in percent; 100 = whole session
     const GUIDE_OPTIONS = [100, 10, 30, 50];
-    const ANIMATION_OPTIONS = [0, 1];
+    const ANIMATION_NONE = 0;
+    const ANIMATION_RINGS = 1;
+    const ANIMATION_FACE = 2;
+    const ANIMATION_OPTIONS = [ANIMATION_NONE, ANIMATION_RINGS, ANIMATION_FACE];
 
     function get(key as String, fallback as Number) as Number {
         var value = Application.Storage.getValue(key);
@@ -27,7 +30,7 @@ module Settings {
     function durationMin() as Number { return get("duration", 10); }
     function tapMs() as Number { return get("tap", 15); }
     function guidePercent() as Number { return get("guide", 100); }
-    function animation() as Boolean { return get("animation", 0) == 1; }
+    function animation() as Number { return get("animation", ANIMATION_NONE); }
 
     function rhythmLabel() as String {
         return inhaleSec() + "/" + exhaleSec();
@@ -44,7 +47,10 @@ module Settings {
         } else if (key.equals("guide")) {
             return value == 100 ? "celou dobu" : value + " %";
         } else if (key.equals("animation")) {
-            return value == 1 ? "Ano" : "Ne";
+            if (value == ANIMATION_RINGS) {
+                return "Kruhy";
+            }
+            return value == ANIMATION_FACE ? "Tvář" : "Ne";
         }
         return value.toString();
     }
