@@ -48,3 +48,5 @@ Aplikace vznikla za jeden den ve spolupráci s [Claude Code](https://claude.com/
 4. **Testování na hodinkách:** každou verzi jsem vyzkoušel při skutečné meditaci a podle toho jsme opravovali chyby a doplňovali vylepšení (jemnější vibrace, vedení jen na začátek, návrat do menu po zrušení, animace tváře).
 
 Podrobné zadání: [docs/spec.md](docs/spec.md)
+
+Popis logiky a grafiky pro převod na jiné hodinky: [docs/porting-guide.md](docs/porting-guide.md)
