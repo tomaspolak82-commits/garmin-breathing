@@ -16,6 +16,7 @@ Aplikace pro hodinky Garmin (Connect IQ), která vede koherenční dýchání je
 
 ## Podporované hodinky
 - Garmin Forerunner 165 Music – vyzkoušeno na skutečných hodinkách
+- Garmin Venu 4 41 mm a 45 mm – vyzkoušeno v simulátoru (ovládání dotykem, obě velikosti displeje)
 
 Záznam jako meditace vyžaduje Connect IQ API 4.1.6 nebo novější.
 
@@ -26,17 +27,17 @@ Záznam jako meditace vyžaduje Connect IQ API 4.1.6 nebo novější.
 
 ## Instalace (nahrání přes USB)
 1. Připoj hodinky kabelem k počítači.
-2. Zkopíruj `Koherence.prg` do `Internal Storage\GARMIN\Apps`.
+2. Zkopíruj soubor pro svůj model (např. `Koherence-venu441mm.prg`) do `Internal Storage\GARMIN\Apps`.
 3. Odpoj hodinky. Aplikaci si nainstalují a soubor ze složky odstraní.
 
 ## Sestavení
 Potřeba: Connect IQ SDK 9.3.0 se soubory zařízení, Java 11+, vývojářský klíč (viz [dokumentace Garminu](https://developer.garmin.com/connect-iq/connect-iq-basics/getting-started)).
 
 ```powershell
-.\build.ps1
+.\build.ps1 -Device venu441mm
 ```
 
-Skript čeká přenosnou Javu v `.tools\jdk-*` a klíč v `.tools\developer_key.der` (obojí je mimo Git). Výsledek: `bin\Koherence.prg`.
+Modely: `fr165m` (výchozí), `venu441mm`, `venu445mm`. Skript čeká přenosnou Javu v `.tools\jdk-*` a klíč v `.tools\developer_key.der` (obojí je mimo Git). Výsledek: `bin\Koherence-<model>.prg`.
 
 ## Jak vznikla
 Aplikace vznikla za jeden den ve spolupráci s [Claude Code](https://claude.com/claude-code):
